@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pay Bills | Vaultix Bank</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .bill-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .bill-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-dark);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .bill-icon {
+            width: 56px; height: 56px;
+            background: var(--bg-white);
+            border-radius: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            font-size: 1.75rem;
+            transition: transform 0.15s;
+        }
+        .bill-item:active .bill-icon { transform: scale(0.93); }
+        .section-label {
+            font-size: 0.8125rem; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 2000; display: none;
+            justify-content: center; align-items: flex-end;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-sheet {
+            background: var(--bg-white); width: 100%; max-width: 480px;
+            border-radius: 1.5rem 1.5rem 0 0; padding: 2rem 1.5rem;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .modal-overlay.active .modal-sheet { transform: translateY(0); }
+        .modal-title { font-size: 1.125rem; font-weight: 700; margin-bottom: 1.5rem; }
+
+        /* Provider pills */
+        .provider-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.25rem; }
+        .provider-pill {
+            padding: 0.5rem 1rem;
+            border: 1.5px solid var(--border-light);
+            border-radius: 99px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            transition: all 0.15s;
+        }
+        .provider-pill.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+    </style>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+</head>
+<body>
+    <div class="mobile-app">
+        <div class="app-header">
+            <a href="/dashboard.html" style="color: var(--text-dark); text-decoration: none; display: flex;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </a>
+            <div class="header-title">Pay Bills</div>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <div class="content-area">
+            <!-- Telecom -->
+            <div class="section-label">📱 Telecom</div>
+            <div class="bill-grid">
+                <div class="bill-item" onclick="openBill('Airtime Top-up', ['MTN','Airtel','Glo','9Mobile'])">
+                    <div class="bill-icon">📞</div>
+                    <span>Airtime</span>
+                </div>
+                <div class="bill-item" onclick="openBill('Data Bundle', ['MTN','Airtel','Glo','9Mobile'])">
+                    <div class="bill-icon">📶</div>
+                    <span>Data</span>
+                </div>
+                <div class="bill-item" onclick="openBill('Cable TV', ['DSTV','GOtv','StarTimes'])">
+                    <div class="bill-icon">📺</div>
+                    <span>Cable TV</span>
+                </div>
+            </div>
+
+            <!-- Utilities -->
+            <div class="section-label">⚡ Utilities</div>
+            <div class="bill-grid">
+                <div class="bill-item" onclick="openBill('Electricity', ['IKEDC','EKEDC','AEDC','PHED'])">
+                    <div class="bill-icon">💡</div>
+                    <span>Electricity</span>
+                </div>
+                <div class="bill-item" onclick="openBill('Water Bill', ['FCT Water Board'])">
+                    <div class="bill-icon">🚰</div>
+                    <span>Water</span>
+                </div>
+                <div class="bill-item" onclick="openBill('Internet', ['Spectranet','Smile','Swift'])">
+                    <div class="bill-icon">🌐</div>
+                    <span>Internet</span>
+                </div>
+            </div>
+
+            <!-- Other -->
+            <div class="section-label">🏷️ Others</div>
+            <div class="bill-grid">
+                <div class="bill-item" onclick="openBill('Betting', ['Bet9ja','SportyBet','1xBet'])">
+                    <div class="bill-icon">🎰</div>
+                    <span>Betting</span>
+                </div>
+                <div class="bill-item" onclick="openBill('Education', ['WAEC','JAMB','NECO'])">
+                    <div class="bill-icon">🎓</div>
+                    <span>Education</span>
+                </div>
+                <div class="bill-item" onclick="openBill('Insurance', ['AXA','Leadway','AIICO'])">
+                    <div class="bill-icon">🛡️</div>
+                    <span>Insurance</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bill Payment Modal -->
+        <div class="modal-overlay" id="billModal" onclick="closeBill(event)">
+            <div class="modal-sheet" onclick="event.stopPropagation()">
+                <div class="modal-title" id="billTitle">Pay Bill</div>
+
+                <div class="form-group">
+                    <label>Provider</label>
+                    <div class="provider-grid" id="providerList"></div>
+                </div>
+
+                <div class="form-group">
+                    <label id="numberLabel">Phone / Meter Number</label>
+                    <input type="tel" id="billNumber" placeholder="Enter number">
+                </div>
+
+                <div class="form-group">
+                    <label>Amount (₦)</label>
+                    <input type="number" id="billAmount" placeholder="1000" min="50">
+                </div>
+
+                <button class="btn btn-primary" id="payBtn" onclick="payBill()">Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        let selectedProvider = null;
+        let currentBillType = '';
+
+        function openBill(title, providers) {
+            currentBillType = title;
+            selectedProvider = null;
+            document.getElementById('billTitle').textContent = title;
+            document.getElementById('billNumber').value = '';
+            document.getElementById('billAmount').value = '';
+
+            const grid = document.getElementById('providerList');
+            grid.innerHTML = providers.map(p =>
+                `<div class="provider-pill" onclick="selectProvider(this, '${p}')">${p}</div>`
+            ).join('');
+
+            const modal = document.getElementById('billModal');
+            modal.style.display = 'flex';
+            setTimeout(() => modal.classList.add('active'), 10);
+        }
+
+        function closeBill(e) {
+            if (e && e.target !== e.currentTarget) return;
+            const m = document.getElementById('billModal');
+            m.classList.remove('active');
+            setTimeout(() => m.style.display = 'none', 300);
+        }
+
+        function selectProvider(el, name) {
+            document.querySelectorAll('.provider-pill').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedProvider = name;
+        }
+
+        async function payBill() {
+            if (!selectedProvider) { alert('Select a provider'); return; }
+            const number = document.getElementById('billNumber').value.trim();
+            const amount = parseFloat(document.getElementById('billAmount').value);
+            if (!number) { alert('Enter a number'); return; }
+            if (!amount || amount < 50) { alert('Min ₦50'); return; }
+
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            try {
+                // Get user's primary account
+                const accRes = await fetch('/api/accounts/my-accounts', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const accData = await accRes.json();
+                if (!accData.accounts || accData.accounts.length === 0) {
+                    alert('No account found');
+                    return;
+                }
+                const accId = accData.accounts[0].ACCOUNT_ID;
+
+                // Process as withdrawal
+                const res = await fetch('/api/transactions/withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        account_id: accId,
+                        amount: amount,
+                        description: `${currentBillType} - ${selectedProvider} - ${number}`
+                    })
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    alert(`${currentBillType} payment of ₦${amount.toLocaleString()} to ${selectedProvider} was successful!`);
+                    closeBill(true);
+                } else {
+                    alert('Payment failed: ' + (data.detail || 'Unknown error'));
+                }
+            } catch (err) {
+                alert('Network error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Pay Now';
+            }
+        }
+
+        // Fix close for programmatic calls
+        function closeBill(force) {
+            const m = document.getElementById('billModal');
+            m.classList.remove('active');
+            setTimeout(() => m.style.display = 'none', 300);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profile | Vaultix Bank</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .profile-header {
+            background: var(--primary);
+            color: white;
+            padding: 2rem 1.25rem 3rem;
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            border: 2px solid white;
+        }
+        .settings-list {
+            background: var(--bg-white);
+            border-radius: 1rem;
+            margin: -2rem 1.25rem 1rem;
+            padding: 0.5rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            position: relative;
+        }
+        .settings-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            text-decoration: none;
+            color: var(--text-dark);
+            border-bottom: 1px solid var(--border-light);
+        }
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        .settings-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            color: var(--primary);
+        }
+    </style>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+</head>
+<body>
+    <div class="mobile-app">
+        <!-- Header Profile -->
+        <div class="profile-header">
+            <div class="profile-avatar" id="profInitials">--</div>
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.25rem;" id="profName">Loading...</h2>
+            <div style="font-size: 0.875rem; opacity: 0.9;" id="profEmail">--</div>
+            <div style="margin-top: 1rem; display: inline-block; background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.75rem;">
+                <span style="color: #10B981;">●</span> KYC Verified
+            </div>
+        </div>
+
+        <div class="content-area" style="padding: 0; padding-bottom: 5rem;">
+            <!-- Settings Menu -->
+            <div class="settings-list">
+                <a href="/account.html" class="settings-item">
+                    <div class="settings-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+                    <div style="flex: 1; font-weight: 500;">Account Details</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </a>
+                <a href="/security.html" class="settings-item">
+                    <div class="settings-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>
+                    <div style="flex: 1; font-weight: 500;">Security & PIN</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </a>
+                <a href="#" class="settings-item">
+                    <div class="settings-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div>
+                    <div style="flex: 1; font-weight: 500;">Notifications</div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </a>
+                <div class="settings-item" style="cursor: pointer;" onclick="toggleDarkMode()">
+                    <div class="settings-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></div>
+                    <div style="flex: 1; font-weight: 500;">Dark Mode</div>
+                    <div style="width: 36px; height: 20px; background: var(--border-light); border-radius: 99px; position: relative; transition: background 0.3s;" id="darkToggleBg">
+                        <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: transform 0.3s;" id="darkToggleKnob"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div style="padding: 1.25rem;">
+                <button class="btn" style="background: white; color: var(--danger); border: 1px solid #fee2e2;" onclick="logout()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a href="/dashboard.html" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Home
+            </a>
+            <a href="/transfers.html" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M17 3l.001 2c0 3.313-2.687 6-6 6H3"/><path d="M7 6L3 11l4 5"/><path d="M7 21l-.001-2c0-3.313 2.687-6 6-6h8"/><path d="M17 18l4-5-4-5"/></svg>
+                Transfer
+            </a>
+            <a href="/history.html" class="nav-item">
+                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                History
+            </a>
+            <a href="/profile.html" class="nav-item active">
+                <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                Me
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        async function loadProfile() {
+            try {
+                const res = await fetch('/api/accounts/profile', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    const u = data.profile;
+                    document.getElementById('profName').textContent = `${u.FIRST_NAME} ${u.LAST_NAME}`;
+                    document.getElementById('profEmail').textContent = u.EMAIL;
+                    document.getElementById('profInitials').textContent = `${u.FIRST_NAME.charAt(0)}${u.LAST_NAME.charAt(0)}`.toUpperCase();
+                }
+            } catch(e) {}
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        // Initialize toggle visually
+        if (localStorage.getItem('theme') === 'dark') {
+            document.getElementById('darkToggleBg').style.background = 'var(--primary)';
+            document.getElementById('darkToggleKnob').style.transform = 'translateX(16px)';
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            if (isDark) {
+                localStorage.setItem('theme', 'dark');
+                document.getElementById('darkToggleBg').style.background = 'var(--primary)';
+                document.getElementById('darkToggleKnob').style.transform = 'translateX(16px)';
+            } else {
+                localStorage.setItem('theme', 'light');
+                document.getElementById('darkToggleBg').style.background = 'var(--border-light)';
+                document.getElementById('darkToggleKnob').style.transform = 'translateX(0)';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProfile);
+    </script>
+</body>
+</html>

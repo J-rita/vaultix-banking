@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Vaultix Banking</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+</head>
+<body>
+    <nav>
+        <div class="container nav-content">
+            <a href="/dashboard.html" class="logo">Vaultix</a>
+            <button onclick="logout()" class="btn btn-outline">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-layout">
+            <aside class="sidebar card">
+                <a href="/dashboard.html" class="side-link">Dashboard</a>
+                <a href="/transfers.html" class="side-link">Transfers</a>
+                <a href="/loans.html" class="side-link">Loans & Credit</a>
+                <a href="/history.html" class="side-link">Full History</a>
+                <a href="/notifications.html" class="side-link">Notifications</a>
+                <a href="/profile.html" class="side-link">My Profile</a>
+                <a href="/settings.html" class="side-link active">Settings</a>
+            </aside>
+
+            <main>
+                <header style="margin-bottom: 2rem;">
+                    <h1>Account Settings</h1>
+                    <p style="color: var(--text-gray);">Manage your security preferences and app experience.</p>
+                </header>
+
+                <div class="card" style="max-width: 600px;">
+                    <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Security Settings</h2>
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="currentPassword" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPassword" placeholder="••••••••" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Password</button>
+                    </form>
+                </div>
+
+                <div class="card" style="max-width: 600px; margin-top: 2rem;">
+                    <h2 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Notification Preferences</h2>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">Email Alerts</div>
+                                <div style="font-size: 0.875rem; color: var(--text-gray);">Receive updates about transfers and logins.</div>
+                            </div>
+                            <input type="checkbox" checked>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-weight: 600;">SMS Notifications</div>
+                                <div style="font-size: 0.875rem; color: var(--text-gray);">Instant alerts for all transactions.</div>
+                            </div>
+                            <input type="checkbox">
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                current_password: document.getElementById('currentPassword').value,
+                new_password: document.getElementById('newPassword').value
+            };
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    alert("Password updated successfully!");
+                    e.target.reset();
+                } else {
+                    alert("Error: " + data.detail);
+                }
+            } catch (err) { alert("Network error. Please try again."); }
+        });
+
+        function logout() { localStorage.clear(); window.location.href = '/login.html'; }
+    </script>
+</body>
+</html>

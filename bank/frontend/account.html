@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Account | Vaultix Bank</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .acc-display-card {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 1.25rem;
+            padding: 2rem 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(15, 118, 110, 0.25);
+        }
+        .acc-display-card::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 120px; height: 120px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+        .acc-display-card::after {
+            content: '';
+            position: absolute;
+            bottom: -30px; left: -30px;
+            width: 100px; height: 100px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 50%;
+        }
+        .acc-number-display {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            position: relative;
+            z-index: 1;
+        }
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 99px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 1;
+        }
+        .copy-btn:active { transform: scale(0.95); }
+        .copy-btn.copied { background: #10B981; border-color: #10B981; }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-label { color: var(--text-muted); font-size: 0.875rem; }
+        .detail-value { font-weight: 600; font-size: 0.875rem; }
+
+        .share-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .share-btn {
+            padding: 0.875rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-light);
+            background: var(--bg-white);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.15s;
+        }
+        .share-btn:active { transform: scale(0.97); }
+    </style>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+</head>
+<body>
+    <div class="mobile-app">
+        <div class="app-header">
+            <a href="/profile.html" style="color: var(--text-dark); text-decoration: none; display: flex;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </a>
+            <div class="header-title">Account Details</div>
+            <div style="width: 24px;"></div>
+        </div>
+
+        <div class="content-area">
+            <!-- Account Number Card -->
+            <div class="acc-display-card">
+                <div style="font-size: 0.875rem; opacity: 0.9; position: relative; z-index: 1;">Your Account Number</div>
+                <div class="acc-number-display" id="accNumber">---</div>
+                <div style="font-size: 0.8125rem; opacity: 0.8; margin-bottom: 1.25rem; position: relative; z-index: 1;">
+                    <span id="bankName">Vaultix Bank</span>
+                </div>
+                <button class="copy-btn" id="copyBtn" onclick="copyAccNumber()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span id="copyText">Copy Number</span>
+                </button>
+            </div>
+
+            <!-- Account Details -->
+            <div class="card">
+                <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem;">Account Information</h3>
+                <div class="detail-row">
+                    <span class="detail-label">Account Holder</span>
+                    <span class="detail-value" id="holderName">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Account Type</span>
+                    <span class="detail-value" id="accType">--</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Bank</span>
+                    <span class="detail-value">Vaultix Bank</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status</span>
+                    <span class="detail-value" style="color: #10B981;">● Active</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Currency</span>
+                    <span class="detail-value">NGN (₦)</span>
+                </div>
+            </div>
+
+            <!-- Share -->
+            <div class="share-grid">
+                <button class="share-btn" onclick="shareDetails()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    Share Details
+                </button>
+                <button class="share-btn" onclick="copyAccNumber()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Copy Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        let accountNumber = '';
+
+        async function loadAccount() {
+            try {
+                const [accRes, profRes] = await Promise.all([
+                    fetch('/api/accounts/my-accounts', { headers: { 'Authorization': `Bearer ${token}` } }),
+                    fetch('/api/accounts/profile', { headers: { 'Authorization': `Bearer ${token}` } })
+                ]);
+                const accData = await accRes.json();
+                const profData = await profRes.json();
+
+                if (accData.status === 'success' && accData.accounts.length > 0) {
+                    const acc = accData.accounts[0];
+                    accountNumber = acc.ACCOUNT_NUMBER;
+                    document.getElementById('accNumber').textContent = accountNumber;
+                    document.getElementById('accType').textContent = acc.ACCOUNT_TYPE || 'Savings';
+                }
+                if (profData.status === 'success') {
+                    const u = profData.profile;
+                    document.getElementById('holderName').textContent = `${u.FIRST_NAME} ${u.LAST_NAME}`;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function copyAccNumber() {
+            if (!accountNumber) return;
+            navigator.clipboard.writeText(accountNumber).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const txt = document.getElementById('copyText');
+                btn.classList.add('copied');
+                txt.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    txt.textContent = 'Copy Number';
+                }, 2000);
+            });
+        }
+
+        function shareDetails() {
+            const text = `Vaultix Bank\nAccount Number: ${accountNumber}\nAccount Holder: ${document.getElementById('holderName').textContent}\nBank: Vaultix Bank`;
+            if (navigator.share) {
+                navigator.share({ title: 'My Vaultix Account', text });
+            } else {
+                navigator.clipboard.writeText(text);
+                alert('Account details copied to clipboard!');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadAccount);
+    </script>
+</body>
+</html>

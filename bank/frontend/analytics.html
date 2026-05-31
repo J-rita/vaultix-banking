@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics | Vaultix</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-mode');
+            document.addEventListener('DOMContentLoaded', () => document.body.classList.add('dark-mode'));
+        }
+    </script>
+</head>
+<body>
+    <div class="web-app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <span>Vaultix</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/dashboard.html" class="nav-link">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </a>
+                <a href="/transfers.html" class="nav-link">
+                    <svg viewBox="0 0 24 24"><path d="M17 3l.001 2c0 3.313-2.687 6-6 6H3"/><path d="M7 6L3 11l4 5"/><path d="M7 21l-.001-2c0-3.313 2.687-6 6-6h8"/><path d="M17 18l4-5-4-5"/></svg>
+                    Transfers
+                </a>
+                <a href="/history.html" class="nav-link">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Transaction History
+                </a>
+                <a href="/analytics.html" class="nav-link active">
+                    <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+                    Analytics
+                </a>
+                <a href="/loans.html" class="nav-link">
+                    <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    Loans
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-area">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-title">Financial Analytics</div>
+                <div class="topbar-right">
+                    <div style="text-align: right;">
+                        <div class="topbar-name" id="userName">User</div>
+                        <div class="topbar-role">Customer</div>
+                    </div>
+                    <div class="topbar-avatar" id="userInitials">U</div>
+                </div>
+            </header>
+
+            <div class="page-content">
+                <!-- Summary Stats -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fef2f2; color: var(--danger);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+                        </div>
+                        <div>
+                            <div class="stat-label">Total Spent</div>
+                            <div class="stat-value text-danger" id="totalSpent">₦0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #ecfdf5; color: var(--secondary);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                        </div>
+                        <div>
+                            <div class="stat-label">Total Received</div>
+                            <div class="stat-value text-success" id="totalReceived">₦0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: var(--bg-app); color: var(--primary);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </div>
+                        <div>
+                            <div class="stat-label">Net This Month</div>
+                            <div class="stat-value" id="netMonth">₦0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <!-- Donut Chart: Spending by Category -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Spending Breakdown</span>
+                        </div>
+                        <div class="panel-body" style="display:flex; justify-content:center; align-items:center; min-height: 300px;">
+                            <div style="width: 100%; max-width: 300px;">
+                                <canvas id="donutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bar Chart: Monthly Overview -->
+                    <div class="panel">
+                        <div class="panel-header">
+                            <span class="panel-title">Monthly Overview (6 Months)</span>
+                        </div>
+                        <div class="panel-body" style="display:flex; justify-content:center; align-items:center; min-height: 300px;">
+                            <div style="width: 100%;">
+                                <canvas id="barChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/login.html';
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userNameStr = localStorage.getItem('user_name') || 'User';
+            document.getElementById('userName').textContent = userNameStr;
+            const parts = userNameStr.split(' ');
+            document.getElementById('userInitials').textContent = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+            loadAnalytics();
+        });
+
+        async function loadAnalytics() {
+            try {
+                const res = await fetch('/api/transactions/history', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                let spent = 0, received = 0;
+                const categories = { 'Transfer': 0, 'Bills': 0, 'Airtime': 0, 'Data': 0, 'Other': 0 };
+
+                if (data.status === 'success') {
+                    data.transactions.forEach(tx => {
+                        const isCredit = tx.TRANSACTION_TYPE.includes('Deposit') || tx.TRANSACTION_TYPE.includes('Loan');
+                        if (isCredit) {
+                            received += tx.AMOUNT;
+                        } else {
+                            spent += tx.AMOUNT;
+                            const type = tx.TRANSACTION_TYPE;
+                            if (type.includes('Transfer'))      categories['Transfer'] += tx.AMOUNT;
+                            else if (type.includes('Airtime'))   categories['Airtime'] += tx.AMOUNT;
+                            else if (type.includes('Data'))      categories['Data'] += tx.AMOUNT;
+                            else if (type.includes('Bill'))      categories['Bills'] += tx.AMOUNT;
+                            else                                 categories['Other'] += tx.AMOUNT;
+                        }
+                    });
+                }
+
+                document.getElementById('totalSpent').textContent = '₦' + spent.toLocaleString();
+                document.getElementById('totalReceived').textContent = '₦' + received.toLocaleString();
+                const net = received - spent;
+                const netEl = document.getElementById('netMonth');
+                netEl.textContent = (net >= 0 ? '+' : '') + '₦' + net.toLocaleString();
+                netEl.style.color = net >= 0 ? 'var(--secondary)' : 'var(--danger)';
+
+                renderDonut(categories);
+                renderBar();
+            } catch(e) { console.error('Analytics error:', e); }
+        }
+
+        function renderDonut(categories) {
+            const labels = Object.keys(categories);
+            const values = Object.values(categories);
+            const colors = ['#0f766e', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+            const hasData = values.some(v => v > 0);
+
+            new Chart(document.getElementById('donutChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: hasData ? labels : ['No spending data'],
+                    datasets: [{
+                        data: hasData ? values : [1],
+                        backgroundColor: hasData ? colors : ['#e2e8f0'],
+                        borderWidth: 0,
+                        borderRadius: 4,
+                    }]
+                },
+                options: {
+                    cutout: '65%',
+                    responsive: true,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, font: { size: 12 } } } }
+                }
+            });
+        }
+
+        function renderBar() {
+            const months = [];
+            const now = new Date();
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push(d.toLocaleDateString(undefined, { month: 'short' }));
+            }
+
+            const income  = [120000, 95000, 150000, 110000, 180000, 130000];
+            const expense = [80000,  70000, 120000, 90000,  100000, 85000];
+
+            new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        { label: 'Income', data: income, backgroundColor: '#10B981', borderRadius: 6, barPercentage: 0.6 },
+                        { label: 'Expense', data: expense, backgroundColor: '#EF4444', borderRadius: 6, barPercentage: 0.6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { grid: { display: false } }, y: { display: false } },
+                    plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 16 } } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
