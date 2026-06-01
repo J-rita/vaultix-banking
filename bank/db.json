@@ -16,5 +16,6 @@
     "Accounts": [],
     "Transactions": [],
     "Transfers": [],
-    "AuditLogs": []
+    "AuditLogs": [],
+    "Loans": []
 }
