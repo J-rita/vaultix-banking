@@ -134,8 +134,8 @@ class DatabaseManager:
             })
             # Auto-create Savings and Current accounts
             acc_list = self.mock_db.setdefault("Accounts", [])
-            acc_list.append({"account_id": len(acc_list)+1, "customer_id": cust_id, "account_number": f"214{cust_id:07d}", "account_type": "Savings", "balance": 5000000.0, "status": "Active", "interest_rate": 0.05, "overdraft_limit": 0.0})
-            acc_list.append({"account_id": len(acc_list)+1, "customer_id": cust_id, "account_number": f"224{cust_id:07d}", "account_type": "Current", "balance": 100000.0, "status": "Active", "interest_rate": 0.0, "overdraft_limit": 50000.0})
+            acc_list.append({"account_id": len(acc_list)+1, "customer_id": cust_id, "account_number": f"214{cust_id:07d}", "account_type": "Savings", "balance": 0.0, "status": "Active", "interest_rate": 0.05, "overdraft_limit": 0.0})
+            acc_list.append({"account_id": len(acc_list)+1, "customer_id": cust_id, "account_number": f"224{cust_id:07d}", "account_type": "Current", "balance": 0.0, "status": "Active", "interest_rate": 0.0, "overdraft_limit": 50000.0})
             if commit: self.save_mock_db()
             return True
 
