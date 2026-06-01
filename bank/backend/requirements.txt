@@ -2,5 +2,5 @@ flask
 flask-cors
 flask-jwt-extended
 flask-bcrypt
-python-oracledb
+oracledb
 python-dotenv
