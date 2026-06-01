@@ -135,9 +135,9 @@
                             <thead>
                                 <tr>
                                     <th>Action</th>
-                                    <th>Table & ID</th>
+                                    <th>Table &amp; ID</th>
                                     <th>Changes (Old &rarr; New)</th>
-                                    <th>User & Time</th>
+                                    <th>User &amp; Time</th>
                                 </tr>
                             </thead>
                             <tbody id="auditList">
@@ -152,13 +152,17 @@
 
     <script>
         const token = localStorage.getItem('token');
-        if (localStorage.getItem('role') !== 'Admin') {
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+        const role = localStorage.getItem('role');
+        if (role !== 'Admin') {
             alert("Access Denied: Admin privileges required.");
             window.location.href = '/dashboard.html';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const userNameStr = localStorage.getItem('user_name') || 'Admin';
+            const userNameStr = localStorage.getItem('user_name') || localStorage.getItem('username') || 'Admin';
             document.getElementById('userName').textContent = userNameStr;
             const parts = userNameStr.split(' ');
             document.getElementById('userInitials').textContent = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
@@ -173,28 +177,35 @@
                 if (userData.status === 'success') {
                     document.getElementById('totalUsers').textContent = userData.users.length;
                     const list = document.getElementById('usersList');
-                    list.innerHTML = userData.users.map(u => `
-                        <tr>
-                            <td>
-                                <div style="font-weight:600;">@${u.USERNAME}</div>
-                                <div style="font-size:0.8rem; color:var(--text-muted);">${u.EMAIL}</div>
-                            </td>
-                            <td><span class="badge ${u.STATUS === 'Active' ? 'badge-success' : 'badge-danger'}">${u.STATUS}</span></td>
-                            <td>${u.ROLE}</td>
-                            <td>
-                                <button class="btn btn-sm btn-ghost" onclick="updateStatus(${u.USER_ID}, '${u.STATUS === 'Active' ? 'Frozen' : 'Active'}')">
-                                    ${u.STATUS === 'Active' ? 'Freeze' : 'Activate'}
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
+                    if (userData.users.length === 0) {
+                        list.innerHTML = '<tr><td colspan="4" style="text-align:center;">No users found.</td></tr>';
+                    } else {
+                        list.innerHTML = userData.users.map(u => `
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600;">@${u.USERNAME}</div>
+                                    <div style="font-size:0.8rem; color:var(--text-muted);">${u.EMAIL}</div>
+                                </td>
+                                <td><span class="badge ${u.STATUS === 'Active' ? 'badge-success' : 'badge-danger'}">${u.STATUS}</span></td>
+                                <td>${u.ROLE}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-ghost" onclick="updateStatus(${u.USER_ID}, '${u.STATUS === 'Active' ? 'Frozen' : 'Active'}')">
+                                        ${u.STATUS === 'Active' ? 'Freeze' : 'Activate'}
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
                 }
 
                 // Load Loans
                 const loanRes = await fetch('/api/admin/loans', { headers: { 'Authorization': `Bearer ${token}` } });
                 const loanData = await loanRes.json();
                 if (loanData.status === 'success') {
-                    const pending = loanData.loans.filter(l => l.STATUS === 'Pending');
+                    // Case-insensitive filter - Oracle may return 'Pending' in any case
+                    const pending = loanData.loans.filter(l =>
+                        (l.STATUS || '').toLowerCase() === 'pending'
+                    );
                     document.getElementById('pendingLoansCount').textContent = pending.length;
                     const list = document.getElementById('loansList');
                     if (pending.length === 0) {
@@ -202,8 +213,8 @@
                     } else {
                         list.innerHTML = pending.map(l => `
                             <tr>
-                                <td>#${l.LOAN_ID}<br><span style="font-size:0.8rem; color:var(--text-muted);">User #${l.USER_ID}</span></td>
-                                <td style="font-weight:700;">₦${l.AMOUNT.toLocaleString()}</td>
+                                <td>#${l.LOAN_ID}<br><span style="font-size:0.8rem; color:var(--text-muted);">Customer #${l.USER_ID}</span></td>
+                                <td style="font-weight:700;">₦${(l.AMOUNT || 0).toLocaleString()}</td>
                                 <td>
                                     <div style="display:flex; gap:0.5rem;">
                                         <button class="btn btn-sm btn-success" onclick="reviewLoan(${l.LOAN_ID}, 'Approved')">Approve</button>
@@ -219,11 +230,11 @@
                 const txRes = await fetch('/api/admin/transactions', { headers: { 'Authorization': `Bearer ${token}` } });
                 const txData = await txRes.json();
                 if (txData.status === 'success') {
-                    const total = txData.transactions.reduce((acc, t) => acc + t.AMOUNT, 0);
+                    const total = txData.transactions.reduce((acc, t) => acc + (t.AMOUNT || 0), 0);
                     document.getElementById('totalVolume').textContent = '₦' + total.toLocaleString();
                 }
 
-                // Load True Enterprise Audit Logs
+                // Load Audit Logs
                 const auditRes = await fetch('/api/admin/audit-logs', { headers: { 'Authorization': `Bearer ${token}` } });
                 const auditData = await auditRes.json();
                 if (auditData.status === 'success') {
@@ -264,11 +275,13 @@
 
         async function reviewLoan(lid, decision) {
             if(!confirm(`Are you sure you want to ${decision} this loan?`)) return;
-            await fetch('/api/admin/loan/review', {
+            const res = await fetch('/api/admin/loan/review', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ loan_id: lid, decision: decision })
             });
+            const result = await res.json();
+            alert(result.message || `Loan ${decision}`);
             loadAdminData();
         }
 
