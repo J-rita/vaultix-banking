@@ -142,6 +142,18 @@
                 <div class="pwd-meter"><div class="pwd-fill" id="pwdFill"></div></div>
             </div>
 
+            <div class="row">
+                <div class="form-group">
+                    <label>Transaction PIN</label>
+                    <input type="password" id="transactionPin" placeholder="4-digit PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label>Confirm PIN</label>
+                    <input type="password" id="confirmPin" placeholder="Confirm PIN" maxlength="4" inputmode="numeric" pattern="[0-9]*" required autocomplete="new-password">
+                </div>
+            </div>
+            <p style="font-size:0.8rem; color: var(--text-muted); margin-top: -0.5rem; margin-bottom: 1rem;">🔒 Your PIN is required to approve every transfer. Keep it secret!</p>
+
             <button type="submit" class="btn btn-primary btn-full" id="submitBtn">Create Account</button>
         </form>
 
@@ -181,14 +193,24 @@
             const phone     = document.getElementById('phoneNumber').value.trim();
             const username  = document.getElementById('username').value.trim();
             const password  = document.getElementById('password').value;
+            const pin       = document.getElementById('transactionPin').value.trim();
+            const confirmPin = document.getElementById('confirmPin').value.trim();
 
             // Basic validation
-            if (!firstName || !lastName || !email || !phone || !username || !password) {
+            if (!firstName || !lastName || !email || !phone || !username || !password || !pin) {
                 showMsg('Please fill in all fields.', 'error');
                 return;
             }
             if (password.length < 8) {
                 showMsg('Password must be at least 8 characters.', 'error');
+                return;
+            }
+            if (!/^\d{4}$/.test(pin)) {
+                showMsg('Transaction PIN must be exactly 4 digits.', 'error');
+                return;
+            }
+            if (pin !== confirmPin) {
+                showMsg('Transaction PINs do not match.', 'error');
                 return;
             }
 
@@ -206,7 +228,8 @@
                         email:      email,
                         phone_number: phone,
                         username:   username,
-                        password:   password
+                        password:   password,
+                        transaction_pin: pin
                     })
                 });
 
