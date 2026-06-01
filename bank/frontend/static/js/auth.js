@@ -21,7 +21,6 @@ if (registerForm) {
                 body: JSON.stringify(data)
             });
 
-            // Check if response is JSON
             const contentType = response.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
                 const text = await response.text();
@@ -67,7 +66,12 @@ if (loginForm) {
                 localStorage.setItem('token', result.access_token);
                 localStorage.setItem('role', result.role);
                 localStorage.setItem('username', data.username);
-                window.location.href = 'dashboard.html';
+                
+                if (result.role === 'Admin') {
+                    window.location.href = 'admin.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
             } else {
                 alert("Login Error: " + (result.detail || "Invalid credentials"));
             }
