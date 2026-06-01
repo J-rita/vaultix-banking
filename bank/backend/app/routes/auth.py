@@ -16,8 +16,9 @@ def register():
         email = data.get('email', '').strip()
         phone_number = data.get('phone_number', '').strip()
         password = data.get('password', '').strip()
+        transaction_pin = data.get('transaction_pin', '').strip()
 
-        if not all([username, email, password]):
+        if not all([username, email, password, transaction_pin]):
             return jsonify({"status": "error", "detail": "Missing fields"}), 400
             
         if '@' not in email:
@@ -26,6 +27,9 @@ def register():
         if phone_number and (not phone_number.isdigit() or len(phone_number) != 11):
             return jsonify({"status": "error", "detail": "Phone number must be exactly 11 digits"}), 400
 
+        if not transaction_pin.isdigit() or len(transaction_pin) != 4:
+            return jsonify({"status": "error", "detail": "Transaction PIN must be exactly 4 digits"}), 400
+
         check_query = "SELECT * FROM Customers WHERE username = :1 OR email = :2"
         existing_user = db.execute_query(check_query, [username, email])
         
@@ -33,10 +37,10 @@ def register():
             return jsonify({"status": "error", "detail": "Username or email already exists"}), 409
         
         hashed_pw = get_password_hash(password)
-        insert_query = "INSERT INTO Customers (username, email, password_hash, first_name, last_name, phone_number) VALUES (:1, :2, :3, :4, :5, :6)"
-        db.execute_query(insert_query, [username, email, hashed_pw, first_name, last_name, phone_number], commit=True)
+        hashed_pin = get_password_hash(transaction_pin)
+        insert_query = "INSERT INTO Customers (username, email, password_hash, first_name, last_name, phone_number, transaction_pin_hash) VALUES (:1, :2, :3, :4, :5, :6, :7)"
+        db.execute_query(insert_query, [username, email, hashed_pw, first_name, last_name, phone_number, hashed_pin], commit=True)
 
-        # Fetch the new customer ID and create their bank accounts
         new_customer = db.execute_query("SELECT * FROM Customers WHERE username = :1", [username])
         if new_customer:
             cust_id = int(new_customer[0].get('customer_id'))
@@ -65,7 +69,6 @@ def login():
         if not username or not password:
             return jsonify({"status": "error", "detail": "Missing credentials"}), 400
 
-        # Check Staff First
         staff = db.execute_query("SELECT * FROM BankStaff WHERE username = :1", [username])
         if staff and len(staff) > 0:
             user = staff[0]
@@ -73,7 +76,6 @@ def login():
                 token = create_access_token(identity=user['username'], additional_claims={"role": user['role']})
                 return jsonify({"status": "success", "access_token": token, "role": user['role'], "username": user['username']}), 200
 
-        # Check Customer (allow login via username, email, or phone)
         customer = db.execute_query("SELECT * FROM Customers WHERE username = :1 OR email = :2 OR phone_number = :3", [username, username, username])
         if customer and len(customer) > 0:
             user = customer[0]
@@ -96,7 +98,6 @@ def change_password():
         current_pw = data.get('current_password')
         new_pw = data.get('new_password')
         
-        # Check customer
         user_res = db.execute_query("SELECT * FROM Customers WHERE username = :1", [username])
         if user_res:
             user = user_res[0]
