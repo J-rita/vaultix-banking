@@ -15,9 +15,7 @@ def deposit():
         account_id = data.get('account_id')
         amount = float(data.get('amount', 0))
         description = data.get('description', 'ATM/Cash Deposit')
-        
         TransferService.process_deposit(account_id, amount, description)
-        
         return jsonify({"status": "success", "message": f"Successfully deposited {amount}"}), 200
     except BankingException as be:
         return jsonify({"status": "error", "detail": str(be)}), 400
@@ -32,9 +30,7 @@ def withdraw():
         account_id = data.get('account_id')
         amount = float(data.get('amount', 0))
         description = data.get('description', 'ATM Withdrawal')
-        
         TransferService.process_withdrawal(account_id, amount, description)
-        
         return jsonify({"status": "success", "message": f"Successfully withdrawn {amount}"}), 200
     except BankingException as be:
         return jsonify({"status": "error", "detail": str(be)}), 400
@@ -45,20 +41,32 @@ def withdraw():
 @jwt_required()
 def transfer():
     try:
+        username = get_jwt_identity()
         data = request.get_json()
         sender_acc_id = data.get('sender_account_id')
         receiver_acc_num = data.get('receiver_account_number')
         amount = float(data.get('amount', 0))
         description = data.get('description', 'Funds Transfer')
-        
+        transaction_pin = data.get('transaction_pin', '').strip()
+
+        if not transaction_pin:
+            return jsonify({"status": "error", "detail": "Transaction PIN is required"}), 400
+
+        user_res = db.execute_query("SELECT * FROM Customers WHERE username = :1", [username])
+        if not user_res:
+            return jsonify({"status": "error", "detail": "User not found"}), 404
+
+        from ..auth.security import verify_password
+        stored_pin_hash = user_res[0].get('transaction_pin_hash', '')
+        if not stored_pin_hash or not verify_password(transaction_pin, stored_pin_hash):
+            return jsonify({"status": "error", "detail": "Incorrect Transaction PIN. Transfer blocked."}), 401
+
         receiver_res = db.execute_query("SELECT * FROM Accounts WHERE account_number = :1", [receiver_acc_num])
         if not receiver_res:
             return jsonify({"status": "error", "detail": "Recipient account not found"}), 404
             
         receiver_id = receiver_res[0]['account_id']
-        
         TransferService.process_transfer(sender_acc_id, receiver_id, amount, description)
-        
         return jsonify({"status": "success", "message": "Funds transferred successfully"}), 200
     except BankingException as be:
         return jsonify({"status": "error", "detail": str(be)}), 400
@@ -81,12 +89,9 @@ def get_history():
             return jsonify({"status": "success", "transactions": []}), 200
 
         account_ids = [str(a['account_id']) for a in accounts]
-        
         all_txs = []
         for acc_id in account_ids:
-            rows = db.execute_query(
-                "SELECT * FROM Transactions WHERE account_id = :1 ORDER BY created_at DESC", [acc_id]
-            )
+            rows = db.execute_query("SELECT * FROM Transactions WHERE account_id = :1 ORDER BY created_at DESC", [acc_id])
             if rows:
                 for row in rows:
                     if not any(t.get('transaction_id') == row.get('transaction_id') for t in all_txs):
