@@ -33,7 +33,20 @@ class DatabaseManager:
             self.mock_db = self._init_mock_db()
 
     def _init_mock_db(self):
-        defaults = {"Customers": [], "BankStaff": [], "Accounts": [], "Transactions": [], "Transfers": [], "AuditLogs": [], "Loans": []}
+        defaults = {
+            "Customers": [], 
+            "BankStaff": [{
+                "staff_id": 1,
+                "username": "admin",
+                "email": "admin@vaultix.com",
+                "password_hash": "$2b$12$WCzYQTfDR9daPutx0jWdaeXdIAOFUzMG9rtJlfObCdOcX06JBthRu",
+                "first_name": "Super",
+                "last_name": "Admin",
+                "role": "Admin",
+                "status": "Active"
+            }], 
+            "Accounts": [], "Transactions": [], "Transfers": [], "AuditLogs": [], "Loans": []
+        }
         if os.path.exists(self.db_file):
             with open(self.db_file, "r") as f:
                 try:
@@ -60,17 +73,21 @@ class DatabaseManager:
             try:
                 conn = oracledb.connect(user=self.db_user, password=self.db_pass, dsn=self.db_dsn)
                 cursor = conn.cursor()
+                
+                # Add OUT parameter dynamically
                 out_status = cursor.var(str)
                 params.append(out_status)
+                
                 cursor.callproc(proc_name, params)
                 status = out_status.getvalue()
+                
                 cursor.close()
                 conn.close()
                 return status
             except Exception as e:
                 raise DatabaseConnectionException(f"Oracle Procedure Error: {e}")
         else:
-            return "SUCCESS"
+            return "SUCCESS" # Simulator fallback
 
     def _execute_oracle(self, query: str, params: list, commit: bool):
         try:
@@ -91,11 +108,13 @@ class DatabaseManager:
             raise DatabaseConnectionException(f"Oracle Error: {e}")
 
     def _execute_simulator(self, query: str, params: list, commit: bool):
+        # Fallback simulator logic
         q = query.upper().strip()
         p = params or []
         
         if "SELECT" in q and "FROM CUSTOMERS" in q:
              if "WHERE USERNAME =" in q and "OR EMAIL =" in q:
+                 # Registration duplicate check: username OR email
                  return [c for c in self.mock_db.get("Customers", []) if c.get("username", "").lower() == str(p[0]).lower() or c.get("email", "").lower() == str(p[1]).lower()]
              if "WHERE USERNAME =" in q:
                  return [c for c in self.mock_db.get("Customers", []) if c.get("username", "").lower() == str(p[0]).lower()]
@@ -118,6 +137,7 @@ class DatabaseManager:
              return self.mock_db.get("Accounts", [])
 
         if "INSERT INTO CUSTOMERS" in q:
+            # Params: [username, email, password_hash, first_name, last_name, phone_number, transaction_pin_hash]
             cust_id = len(self.mock_db.get("Customers", [])) + 1
             self.mock_db.setdefault("Customers", []).append({
                 "customer_id": cust_id,
@@ -127,6 +147,7 @@ class DatabaseManager:
                 "transaction_pin_hash": p[6] if len(p) > 6 else "",
                 "status": "Active", "created_at": __import__('datetime').datetime.now().isoformat()
             })
+            # Auto-create Savings and Current accounts
             acc_list = self.mock_db.setdefault("Accounts", [])
             acc_list.append({"account_id": len(acc_list)+1, "customer_id": cust_id, "account_number": f"214{cust_id:07d}", "account_type": "Savings", "balance": 0.0, "status": "Active", "interest_rate": 0.05, "overdraft_limit": 0.0})
             acc_list.append({"account_id": len(acc_list)+1, "customer_id": cust_id, "account_number": f"224{cust_id:07d}", "account_type": "Current", "balance": 0.0, "status": "Active", "interest_rate": 0.0, "overdraft_limit": 50000.0})
@@ -140,6 +161,7 @@ class DatabaseManager:
             return sorted(tx_list, key=lambda x: x.get("created_at", ""), reverse=True)
 
         if "INSERT INTO TRANSACTIONS" in q:
+            # Params: [account_id, amount, transaction_type, description, status]
             import datetime
             tx_list = self.mock_db.setdefault("Transactions", [])
             tx_list.append({
