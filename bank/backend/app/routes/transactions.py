@@ -15,7 +15,9 @@ def deposit():
         account_id = data.get('account_id')
         amount = float(data.get('amount', 0))
         description = data.get('description', 'ATM/Cash Deposit')
+        
         TransferService.process_deposit(account_id, amount, description)
+        
         return jsonify({"status": "success", "message": f"Successfully deposited {amount}"}), 200
     except BankingException as be:
         return jsonify({"status": "error", "detail": str(be)}), 400
@@ -30,7 +32,9 @@ def withdraw():
         account_id = data.get('account_id')
         amount = float(data.get('amount', 0))
         description = data.get('description', 'ATM Withdrawal')
+        
         TransferService.process_withdrawal(account_id, amount, description)
+        
         return jsonify({"status": "success", "message": f"Successfully withdrawn {amount}"}), 200
     except BankingException as be:
         return jsonify({"status": "error", "detail": str(be)}), 400
@@ -49,6 +53,7 @@ def transfer():
         description = data.get('description', 'Funds Transfer')
         transaction_pin = data.get('transaction_pin', '').strip()
 
+        # Verify transaction PIN
         if not transaction_pin:
             return jsonify({"status": "error", "detail": "Transaction PIN is required"}), 400
 
@@ -66,13 +71,16 @@ def transfer():
             return jsonify({"status": "error", "detail": "Recipient account not found"}), 404
             
         receiver_id = receiver_res[0]['account_id']
+        
         TransferService.process_transfer(sender_acc_id, receiver_id, amount, description)
+        
         return jsonify({"status": "success", "message": "Funds transferred successfully"}), 200
     except BankingException as be:
         return jsonify({"status": "error", "detail": str(be)}), 400
     except Exception as e:
         traceback.print_exc()
         return jsonify({"status": "error", "detail": "Internal transaction failure"}), 500
+
 
 @bp.route('/history', methods=['GET'])
 @jwt_required()
@@ -89,9 +97,12 @@ def get_history():
             return jsonify({"status": "success", "transactions": []}), 200
 
         account_ids = [str(a['account_id']) for a in accounts]
+        
         all_txs = []
         for acc_id in account_ids:
-            rows = db.execute_query("SELECT * FROM Transactions WHERE account_id = :1 ORDER BY created_at DESC", [acc_id])
+            rows = db.execute_query(
+                "SELECT * FROM Transactions WHERE account_id = :1 ORDER BY created_at DESC", [acc_id]
+            )
             if rows:
                 for row in rows:
                     if not any(t.get('transaction_id') == row.get('transaction_id') for t in all_txs):
